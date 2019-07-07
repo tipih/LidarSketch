@@ -19,30 +19,38 @@ int calibratedStrength = 0;
 int calibratedDistance = 0;
 boolean receiveComplete = false;		//Flag to get all data
 static bool calibrated = false;
+unsigned long int time = 0;
+
 SoftwareSerial HC12(3, 4); // Arduino RX, TX  HC12(TX,RX)
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(115200);
 	HC12.begin(9600);
+	pinMode(13, OUTPUT);
 	Serial.println("Setting up Serial port to 115200");
 	TfminiSetup();
 	calibration();
+	time = millis();
 	
 }
 
 // the loop function runs over and over again until power down or reset
 void loop() {
 	
-	
+	if (millis()-time > 1000)
+	{
+		digitalWrite(13, !digitalRead(13));
+		time = millis();
+	}
 
 	
 	if (receiveComplete) {
 		receiveComplete = false;
 		
-
+		if (distance > 400) distance = 400;
 		if (abs(distance - calibratedDistance) > 20)
 		{
-			HC12.print("<START>");
+			HC12.print("<STOP>");
 			HC12.flush();
 			Serial.print(distance);
 			Serial.print("cm\t");
@@ -81,6 +89,7 @@ int calibration()
 
 	calibratedDistance = calibratedDistance / nbr;
 	calibratedStrength = calibratedStrength / nbr;
+	if (calibratedDistance > 400)calibratedDistance = 400;
 	Serial.print("Calibrated Strength");
 	Serial.println(calibratedStrength);
 	Serial.print("Calibrated distance");
